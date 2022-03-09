@@ -1,6 +1,6 @@
 #define MAXSIZE 100
 
-typedef int item_t;
+typedef void *item_t;
 typedef struct
 {
     int size;

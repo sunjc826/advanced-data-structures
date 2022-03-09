@@ -1,4 +1,4 @@
-typedef int item_t;
+typedef void *item_t;
 typedef struct
 {
     item_t *base;
