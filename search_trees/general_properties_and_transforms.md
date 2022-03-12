@@ -1,0 +1,2 @@
+### Combinatorial type of search tree
+By my understanding, this refers to the "shape" of the tree, i.e. intuitively the isomorphism class (or whatever this means in graph theory) of the tree w.r.t the Catalan numbers.

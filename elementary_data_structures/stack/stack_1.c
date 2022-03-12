@@ -20,7 +20,7 @@ int push(ArrayStack *arr_stack, item_t item)
     }
     arr_stack->stack[arr_stack->size] = item;
     arr_stack->size++;
-    return -1;
+    return 0;
 }
 
 item_t pop(ArrayStack *arr_stack)
