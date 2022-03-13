@@ -2,6 +2,14 @@
 
 typedef void *key_t;
 typedef void *object_t;
+
+/*
+Notice there is no wrapper structure around a TreeNode for the root.
+This has a conceptual benefit in that each subnode of a tree node
+is truly a subtree in itself. A tree is now much more symmetrical
+and fractal-like.
+*/
+
 typedef struct tr_n_t
 {
     key_t key;
@@ -11,15 +19,8 @@ typedef struct tr_n_t
 } TreeNode;
 
 // Unimplemented
-TreeNode *get_node()
-{
-    return NULL;
-}
-
-// Unimplemented
-void return_node(TreeNode *node)
-{
-}
+TreeNode *get_node();
+void return_node(TreeNode *node);
 
 TreeNode *create_tree()
 {
@@ -163,6 +164,15 @@ int insert(TreeNode *node, key_t new_key, object_t *new_object)
     return 0;
 }
 
+/*
+Delete uses the trailing pointer technique to keep track of the parent
+of the current node. Below, we can see that delete copies the information
+from the `other_node` to the `upper_node`.
+If we want to transfer the reference of the `other_node` to replace `upper_node`,
+this would require keeping track of grandparents, which would be very hairy
+and have a lot more edge cases.
+For example, upper_node could be the root of the tree, then we won't have a grandparent.
+*/
 object_t *delete (TreeNode *node, key_t delete_key)
 {
     TreeNode *temp_node;
@@ -213,4 +223,68 @@ object_t *delete (TreeNode *node, key_t delete_key)
         return_node(other_node);
         return deleted_object;
     }
+}
+
+typedef struct
+{
+    TreeNode *node1; // tree node associated with stack item
+    TreeNode *node2; // lowest ancestor whose child (in the path toward node1) is a right child
+    int number;      // number of leaves below
+} StackItem;
+// stack operations
+void create_stack();
+int stack_empty();
+int push(StackItem node);
+StackItem pop();
+
+TreeNode *make_tree_top_down(TreeNode *list)
+{
+    StackItem current;
+    StackItem left;
+    StackItem right;
+    TreeNode *temp;
+    TreeNode *root;
+    int length = 0;
+    for (temp = list; temp != NULL; temp = temp->right)
+    {
+        length += 1;
+    }
+    create_stack();
+    root = get_node();
+    current.node1 = root;
+    current.node2 = NULL;
+    current.number = length;
+    push(current);
+    while (!stack_empty())
+    {
+        current = pop();
+        if (current.number > 1)
+        {
+            left.node1 = get_node();
+            left.node2 = current.node2;
+            left.number = current.number / 2;
+            right.node1 = get_node();
+            right.node2 = current.node1;
+            right.number = current.number - left.number;
+            (current.node1)->left = left.node1;
+            (current.node1)->right = right.node1;
+            push(right);
+            push(left);
+        }
+        else
+        {
+            // current.node1 is a leaf node
+            (current.node1)->left = list->left; // this is actually of type `object_t`
+            (current.node1)->key = list->key;
+            (current.node1)->right = NULL;
+            if (current.node2 != NULL)
+            {
+                (current.node2)->key = list->key;
+            }
+            temp = list; // temp is used to keep a reference to the node we are about to return to memory management
+            list = list->right;
+            return_node(temp);
+        }
+    }
+    return root;
 }
