@@ -155,3 +155,7 @@ In either case, we are partitioning the search space $[k_1, k_2)$ into $[k_1, j)
 *In other words*, if we can guarantee that $[j, k)$ is in the upper end of some $[k_1, k_2)$, we can easily insert $[j, k)$ by
 - inserting $j$ into the `key` array *before* $k_2$ and,
 - inserting the node representing $[j, k_2)$ *after* the node representing $[k_1, j)$. In particular, $[j, k_2)$ will not be the first node.
+
+**Pg 87**  If a disk block is 8kB (8000B), half of that is used for `next` pointers, and assuming a memory address is 4B, a disk block can store about $b = 1000$ addresses. If we let $a = 0.5b$, then a node can have at least $500$ children.
+
+Assuming that number of leaves $n<2^{100}$, then approximately, $h\leq \frac{1}{\log_2 500}\log_2 2^{100} < 12$. So the maximal height of the (500, 1000)-tree is 12.
