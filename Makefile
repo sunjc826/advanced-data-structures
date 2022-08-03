@@ -26,8 +26,14 @@ test_queue_v3: queue_v3.out
 test_queue_v4: queue_v4.out
 	./queue_v4.out
 
-%.out: %.c
+.PHONY: test_queue_v5
+test_queue_v5: queue_v5.out
+	./queue_v5.out
+
+%.out: %.c common.h
 	cc -o $@ $^ -Wall $(CCFLAGS)
+
+queue_v5.out: memory_allocator.h memory_allocator.c
 
 .PHONY: clean
 clean:
