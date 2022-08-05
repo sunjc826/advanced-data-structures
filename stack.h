@@ -1,29 +1,26 @@
 #ifndef ads_stack_h
 #define ads_stack_h
-
+#include "common.h"
 // based on stack_v3
 #if defined STACK_TYPE && defined NULL_ITEM && defined STACK_TYPE_NAMESPACE
-#define CONCAT2(a, b) a##b
-#define CONCAT3_(a, b, c) a##b##c
-#define CONCAT3(a, b, c) CONCAT3_(a, b, c)
-#define WITH_TYPE(token) CONCAT3(token, _, STACK_TYPE_NAMESPACE)
-#define WITH_TYPE_FUNC(token, func) CONCAT
 
-typedef STACK_TYPE WITH_TYPE(Item);
+#define WITH_TYPE(token) CONCAT3(token, _, STACK_TYPE_NAMESPACE)
+
+typedef STACK_TYPE WITH_TYPE(StackItem);
 typedef struct WITH_TYPE(StackNode)
 {
-    WITH_TYPE(Item)
+    WITH_TYPE(StackItem)
     item;
     struct WITH_TYPE(StackNode) * next;
 } WITH_TYPE(StackNode);
 
-static void WITH_TYPE(StackNode_init)(WITH_TYPE(StackNode) * node, WITH_TYPE(Item) item)
+static void WITH_TYPE(StackNode_init)(WITH_TYPE(StackNode) * node, WITH_TYPE(StackItem) item)
 {
     node->item = item;
     node->next = NULL;
 }
 
-static WITH_TYPE(StackNode) * WITH_TYPE(NewStackNode)(WITH_TYPE(Item) item)
+static WITH_TYPE(StackNode) * WITH_TYPE(NewStackNode)(WITH_TYPE(StackItem) item)
 {
     WITH_TYPE(StackNode) *n = malloc(sizeof(WITH_TYPE(StackNode)));
     WITH_TYPE(StackNode_init)
@@ -61,15 +58,15 @@ static bool WITH_TYPE(Stack_empty)(WITH_TYPE(StackNode) * stack)
     return stack->next == NULL;
 }
 
-static WITH_TYPE(Item) WITH_TYPE(Stack_peek)(WITH_TYPE(StackNode) * stack)
+static WITH_TYPE(StackItem) WITH_TYPE(Stack_peek)(WITH_TYPE(StackNode) * stack)
 {
     return stack->next->item;
 }
 
-static WITH_TYPE(Item) WITH_TYPE(Stack_pop)(WITH_TYPE(StackNode) * stack)
+static WITH_TYPE(StackItem) WITH_TYPE(Stack_pop)(WITH_TYPE(StackNode) * stack)
 {
     WITH_TYPE(StackNode) *top = stack->next;
-    WITH_TYPE(Item)
+    WITH_TYPE(StackItem)
     item = top->item;
     stack->next = top->next;
     WITH_TYPE(StackNode_free)
@@ -77,7 +74,7 @@ static WITH_TYPE(Item) WITH_TYPE(Stack_pop)(WITH_TYPE(StackNode) * stack)
     return item;
 }
 
-static void WITH_TYPE(Stack_push)(WITH_TYPE(StackNode) * stack, WITH_TYPE(Item) item)
+static void WITH_TYPE(Stack_push)(WITH_TYPE(StackNode) * stack, WITH_TYPE(StackItem) item)
 {
     WITH_TYPE(StackNode) *new_top = WITH_TYPE(NewStackNode)(item);
     new_top->next = stack->next;

@@ -225,8 +225,9 @@ static Object Tree_delete(TreeNode *n, Key key)
 #undef STACK_TYPE_NAMESPACE
 #undef STACK_TYPE
 
+// pg 39
 // Returns all objects whose keys lie in the half open interval [low, high).
-TreeNode *Tree_interval_find(TreeNode *n, Key low, Key high)
+static TreeNode *Tree_interval_find(TreeNode *n, Key low, Key high)
 {
     TreeNode *linked_list = NULL;
     StackNode_TreeNode *stack = NewStack_TreeNode();
@@ -260,6 +261,136 @@ TreeNode *Tree_interval_find(TreeNode *n, Key low, Key high)
     return linked_list;
 }
 
+// pg 40
+// Constructs a relatively balanced (logarithmic height) tree from a sorted list in a bottom up manner.
+// Similar to Tree_interval_find, a TreeNode is repurposed as a linked list node.
+static TreeNode *make_tree_v1(TreeNode *sorted_list)
+{
+    // TODO
+    return NULL;
+}
+
+// Constructs a relatively balanced tree from a sorted list in a top down manner.
+static TreeNode *make_tree_v2(TreeNode *sorted_list)
+{
+    // TODO
+    return NULL;
+}
+
+typedef struct MakeTreeV3_st
+{
+    TreeNode *node;
+    int subtree_size;
+    int offset; // offset into sorted array
+} MakeTreeV3;
+
+static const MakeTreeV3 MakeTreeV3_initializer;
+
+#define QUEUE_TYPE MakeTreeV3
+#define QUEUE_TYPE_NAMESPACE MakeTreeV3
+#define NULL_ITEM MakeTreeV3_initializer
+#include "queue.h"
+#undef NULL_ITEM
+#undef QUEUE_TYPE_NAMESPACE
+#undef QUEUE_TYPE
+
+// This is not in the book.
+// Constructs a relatively balanced tree from a sorted array in a top down manner.
+// Having a sorted array should make things much simpler. In fact, while make_tree_v2 is extremely
+// elegant, a much simpler way would be to reduce v2 to v3 by converting a linked list to an array.
+static TreeNode *make_tree_v3(TreeNode *sorted_array, int length)
+{
+    QueueNode_MakeTreeV3 *queue = NewQueue_MakeTreeV3(); // A stack would also be fine, it doesn't really whether we use queue or stack here.
+    TreeNode *root = NewTree();
+    MakeTreeV3 initial = {
+        .node = root,
+        .offset = 0,
+        .subtree_size = length,
+    };
+
+    Queue_enqueue_MakeTreeV3(queue, initial);
+    while (!Queue_empty_MakeTreeV3(queue))
+    {
+        MakeTreeV3 queue_element = Queue_dequeue_MakeTreeV3(queue);
+        TreeNode *node = queue_element.node;
+        if (queue_element.subtree_size == 1) // leaf
+            TreeNode_write_leaf(node, sorted_array[queue_element.offset].key, sorted_array[queue_element.offset].OBJECT);
+        else // interior node
+        {
+            // We choose to let the right subtree be smaller than left when number of elements is odd
+            int right_subtree_size = queue_element.subtree_size / 2;
+            int left_subtree_size = queue_element.subtree_size - right_subtree_size;
+            node->key = sorted_array[queue_element.offset + left_subtree_size].key;
+            node->LEFT = NewTreeNode(NULL_KEY);
+            node->RIGHT = NewTreeNode(NULL_KEY);
+            MakeTreeV3 left_queue_element = {
+                .node = node->LEFT,
+                .offset = queue_element.offset,
+                .subtree_size = left_subtree_size,
+            };
+            MakeTreeV3 right_queue_element = {
+                .node = node->RIGHT,
+                .offset = queue_element.offset + left_subtree_size,
+                .subtree_size = right_subtree_size,
+            };
+            Queue_enqueue_MakeTreeV3(queue, left_queue_element);
+            Queue_enqueue_MakeTreeV3(queue, right_queue_element);
+        }
+    }
+
+    return root;
+}
+
+// adapted from https://stackoverflow.com/questions/36802354/print-binary-tree-in-a-pretty-way-using-c
+// prefix_length does not include null terminator
+// doesn't seem to work very well, unfortunately
+static void Tree_print_helper(const char *prefix, int prefix_length, const TreeNode *node, bool isLeft)
+{
+
+    printf("%s", prefix);
+
+    printf("%s", (isLeft ? "├──" : "└──"));
+
+    // print the value of the node
+    printf("%d\n", node->key);
+
+    // enter the next tree level - left and right branch
+    char *extension = (isLeft ? "│   " : "    ");
+    int extension_length = strlen(extension);
+    int extended_prefix_length = prefix_length + strlen(extension);
+    char *left_prefix = malloc(extended_prefix_length + 1);
+    memcpy(left_prefix, prefix, prefix_length);
+    memcpy(left_prefix, extension, extension_length);
+    left_prefix[extended_prefix_length] = '\0';
+    char *right_prefix = malloc(extended_prefix_length + 1);
+    memcpy(right_prefix, prefix, prefix_length);
+    memcpy(right_prefix, extension, extension_length);
+    right_prefix[extended_prefix_length] = '\0';
+    if (!TreeNode_IS_LEAF(node))
+    {
+        Tree_print_helper(left_prefix, extended_prefix_length, node->LEFT, true);
+        Tree_print_helper(right_prefix, extended_prefix_length, node->RIGHT, false);
+    }
+}
+
+static void Tree_print(const TreeNode *node)
+{
+    assert(node != NULL);
+    Tree_print_helper("", 0, node, false);
+}
+
+// Prints all leaf nodes.
+static void Tree_inorder_print(const TreeNode *node)
+{
+    if (TreeNode_IS_LEAF(node))
+        printf("%d ", node->key);
+    else
+    {
+        Tree_inorder_print(node->LEFT);
+        Tree_inorder_print(node->RIGHT);
+    }
+}
+
 typedef TreeNode Tree;
 typedef struct
 {
@@ -275,12 +406,23 @@ static TestObject *NewTestObject(Key key, int seq_num)
     return o;
 }
 
+void test_make_tree(void)
+{
+#define NUM_NODES 100
+    TreeNode sorted[NUM_NODES];
+    for (int i = 0; i < NUM_NODES; i++)
+        sorted[i].key = i;
+    TreeNode *tree = make_tree_v3(sorted, NUM_NODES);
+    Tree_inorder_print(tree);
+#undef NUM_NODES
+}
+
 int main()
 {
     Tree *tree = NewTree();
     assert(Tree_find(tree, 1) == NULL_OBJECT);
 
-#define NUM_TRIALS 1000
+#define NUM_TRIALS 10
 #define MIN(a, b) ((a < b) ? a : b)
 #define MAX(a, b) ((a > b) ? a : b)
     int r;
@@ -295,6 +437,8 @@ int main()
         keys[i] = r;
         Tree_insert(tree, r, NewTestObject(r, i));
     }
+
+    Tree_inorder_print(tree);
 
     puts("Testing Tree_interval_find");
     int a = 0;
@@ -328,6 +472,8 @@ int main()
 #undef MAX
 #undef MIN
 #undef NUM_TRIALS
+
+    test_make_tree();
 
     puts("Tests passed");
     return 0;

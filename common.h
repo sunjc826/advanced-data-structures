@@ -10,4 +10,9 @@
 #include <string.h>
 #include <assert.h>
 
+#define CONCAT2_(a, b) a##b
+#define CONCAT2(a, b) CONCAT2_(a, b)
+#define CONCAT3_(a, b, c) a##b##c
+#define CONCAT3(a, b, c) CONCAT3_(a, b, c)
+
 #endif
