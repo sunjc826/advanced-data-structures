@@ -39,6 +39,14 @@ typedef struct TreeNode_st
         b = tmp;         \
     } while (false);
 
+#define STACK_TYPE TreeNode *
+#define STACK_TYPE_NAMESPACE TreeNode
+#define NULL_ITEM NULL
+#include "stack.h"
+#undef NULL_ITEM
+#undef STACK_TYPE_NAMESPACE
+#undef STACK_TYPE
+
 static void TreeNode_init(TreeNode *n, Key key)
 {
     n->key = key;
@@ -72,8 +80,67 @@ static TreeNode *NewTree(void)
     return empty_root;
 }
 
-// Moves nodes on the right of n to the left and maintains a valid BST.
-// n, n->right must be interior nodes.
+// Does not free any objects under leaf nodes.
+static void Tree_free_v1(TreeNode *n)
+{
+    if (Tree_IS_EMPTY(n))
+    {
+        TreeNode_free(n);
+        return;
+    }
+
+    StackNode_TreeNode stack;
+    Stack_init_TreeNode(&stack);
+
+    while (!Stack_empty_TreeNode(&stack))
+    {
+        TreeNode *node = Stack_pop_TreeNode(&stack);
+        if (!TreeNode_IS_LEAF(node))
+        {
+            Stack_push_TreeNode(&stack, node->LEFT);
+            Stack_push_TreeNode(&stack, node->RIGHT);
+        }
+        TreeNode_free(node);
+    }
+}
+
+// Precondition: n, n->left must be interior nodes.
+// Notes: A subroutine of Tree_free_v2. Unlike Tree_right_rotate, this changes the root, hence
+// the return value is the new root after rotation.
+// Note that this differs from the style of the other algorithms,
+// which do not modify the root and so do not require a return value.
+static TreeNode *Tree_right_rotate_v2(TreeNode *n)
+{
+    TreeNode *left = n->LEFT;
+    n->LEFT = left->RIGHT;
+    left->RIGHT = n;
+    return left;
+}
+
+// pg 49
+// Notes: A more elegant tree freeing algorithm making use of rotations. Does not use an auxilliary stack.
+static void Tree_free_v2(TreeNode *n)
+{
+    if (Tree_IS_EMPTY(n))
+    {
+        TreeNode_free(n);
+        return;
+    }
+
+    while (!TreeNode_IS_LEAF(n))
+    {
+        while (!TreeNode_IS_LEAF(n->LEFT))
+            n = Tree_right_rotate_v2(n);
+        TreeNode *right = n->right;
+        TreeNode_free(n->LEFT);
+        TreeNode_free(n);
+        n = right;
+    }
+    TreeNode_free(n);
+}
+
+// Description: Moves nodes on the right of n to the left and maintains a valid BST.
+// Precondition: n, n->right must be interior nodes.
 static void Tree_left_rotate(TreeNode *n)
 {
     SWAP(Key, n->key, n->RIGHT->key);
@@ -84,8 +151,8 @@ static void Tree_left_rotate(TreeNode *n)
     n->LEFT = right;
 }
 
-// Moves nodes on the left of n to the right and maintains a valid BST.
-// n, n->left must be interior nodes.
+// Description: Moves nodes on the left of n to the right and maintains a valid BST.
+// Precondition: n, n->left must be interior nodes.
 static void Tree_right_rotate(TreeNode *n)
 {
     SWAP(Key, n->key, n->LEFT->key);
@@ -217,14 +284,6 @@ static Object Tree_delete(TreeNode *n, Key key)
     return object;
 }
 
-#define STACK_TYPE TreeNode *
-#define STACK_TYPE_NAMESPACE TreeNode
-#define NULL_ITEM NULL
-#include "stack.h"
-#undef NULL_ITEM
-#undef STACK_TYPE_NAMESPACE
-#undef STACK_TYPE
-
 // pg 39
 // Returns all objects whose keys lie in the half open interval [low, high).
 static TreeNode *Tree_interval_find(TreeNode *n, Key low, Key high)
@@ -341,6 +400,37 @@ static TreeNode *make_tree_v3(TreeNode *sorted_array, int length)
     return root;
 }
 
+// pg 48
+// Creates sorted list of the leaves. This is like an inverse operation of make_tree.
+// Unlike the book, this does not free any nodes in the tree.
+static TreeNode *Tree_make_list(TreeNode *n)
+{
+    if (Tree_IS_EMPTY(n))
+        return NULL;
+
+    StackNode_TreeNode *stack = NewStack_TreeNode();
+    TreeNode *linked_list = NULL;
+    Stack_push_TreeNode(stack, n);
+    while (!Stack_empty_TreeNode(stack))
+    {
+        TreeNode *node = Stack_pop_TreeNode(stack);
+        if (TreeNode_IS_LEAF(node))
+        {
+            TreeNode *linked_list_node = NewTreeNodeLeaf(node->key, node->OBJECT);
+            linked_list_node->RIGHT = linked_list;
+            linked_list = linked_list_node;
+        }
+        else
+        {
+            Stack_push_TreeNode(stack, node->LEFT);
+            Stack_push_TreeNode(stack, node->RIGHT);
+        }
+    }
+    Stack_free_TreeNode(stack);
+
+    return linked_list;
+}
+
 // adapted from https://stackoverflow.com/questions/36802354/print-binary-tree-in-a-pretty-way-using-c
 // prefix_length does not include null terminator
 // doesn't seem to work very well, unfortunately
@@ -408,6 +498,7 @@ static TestObject *NewTestObject(Key key, int seq_num)
 
 void test_make_tree(void)
 {
+    puts("Test make_tree");
 #define NUM_NODES 100
     TreeNode sorted[NUM_NODES];
     for (int i = 0; i < NUM_NODES; i++)
@@ -469,6 +560,18 @@ int main()
         assert(o->key == keys[i] && o->insertion_seq_num == i);
     }
     assert(Tree_IS_EMPTY(tree));
+    printf("Test tree free");
+    for (int i = 0; i < NUM_TRIALS; i++)
+    {
+        do
+        {
+            r = random() % KEY_MAX;
+        } while (Tree_find(tree, r) != NULL_OBJECT);
+        keys[i] = r;
+        Tree_insert(tree, r, NewTestObject(r, i));
+    }
+    Tree_free_v2(tree);
+    tree = NULL;
 #undef MAX
 #undef MIN
 #undef NUM_TRIALS

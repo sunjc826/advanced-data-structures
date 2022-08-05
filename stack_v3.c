@@ -27,6 +27,11 @@ static StackNode *NewStackNode(Item item)
     return n;
 }
 
+static void Stack_init(StackNode *stack)
+{
+    StackNode_init(stack, NULL_ITEM);
+}
+
 // Creates a new Stack, more accurately, the sentinel node of the stack.
 static StackNode *NewStack(void)
 {

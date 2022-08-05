@@ -28,6 +28,12 @@ static WITH_TYPE(StackNode) * WITH_TYPE(NewStackNode)(WITH_TYPE(StackItem) item)
     return n;
 }
 
+static void WITH_TYPE(Stack_init)(WITH_TYPE(StackNode) * stack)
+{
+    WITH_TYPE(StackNode_init)
+    (stack, NULL_ITEM);
+}
+
 // Creates a new Stack, more accurately, the sentinel node of the stack.
 static WITH_TYPE(StackNode) * WITH_TYPE(NewStack)(void)
 {

@@ -36,7 +36,7 @@ queue_v5.out: memory_allocator.h memory_allocator.c
 test_search_tree_v1: search_tree_v1.out
 	./search_tree_v1.out
 
-search_tree_v1.out: stack.h
+search_tree_v1.out: stack.h queue.h
 
 %.out: %.c common.h
 	cc -o $@ $^ -Wall $(CCFLAGS)
