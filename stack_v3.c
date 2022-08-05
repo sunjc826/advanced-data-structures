@@ -1,18 +1,18 @@
 // pg 4
 #include "common.h"
+
 typedef int Item;
 #define NULL_ITEM 0
-
-// Memory management ownership rules:
-// All nodes in a stack are owned by the sentinel node.
-// Hence, when freeing any other node, there is no need to free the next node.
-// But when freeing the sentinel, all nodes in the stack are freed.
-
 typedef struct StackNode_st // the st suffix stands for struct
 {
     Item item;
     struct StackNode_st *next;
 } StackNode;
+
+// Memory management ownership rules:
+// All nodes in a stack are owned by the sentinel node.
+// Hence, when freeing any other node, there is no need to free the next node.
+// But when freeing the sentinel, all nodes in the stack are freed.
 
 static void StackNode_init(StackNode *node, Item item)
 {
