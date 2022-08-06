@@ -31,14 +31,6 @@ typedef struct TreeNode_st
 #define Tree_IS_EMPTY(treenode) (((TreeNode *)treenode)->LEFT == NULL)
 #define TreeNode_IS_LEAF(treenode) (((TreeNode *)treenode)->RIGHT == NULL)
 
-#define SWAP(type, a, b) \
-    do                   \
-    {                    \
-        type tmp = a;    \
-        a = b;           \
-        b = tmp;         \
-    } while (false);
-
 #define STACK_TYPE TreeNode *
 #define STACK_TYPE_NAMESPACE TreeNode
 #define NULL_ITEM NULL
@@ -514,8 +506,7 @@ int main()
     assert(Tree_find(tree, 1) == NULL_OBJECT);
 
 #define NUM_TRIALS 10
-#define MIN(a, b) ((a < b) ? a : b)
-#define MAX(a, b) ((a > b) ? a : b)
+
     int r;
     Key keys[NUM_TRIALS];
     puts("Testing Tree_insert");
@@ -572,8 +563,6 @@ int main()
     }
     Tree_free_v2(tree);
     tree = NULL;
-#undef MAX
-#undef MIN
 #undef NUM_TRIALS
 
     test_make_tree();

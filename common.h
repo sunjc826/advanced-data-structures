@@ -14,5 +14,13 @@
 #define CONCAT2(a, b) CONCAT2_(a, b)
 #define CONCAT3_(a, b, c) a##b##c
 #define CONCAT3(a, b, c) CONCAT3_(a, b, c)
-
+#define MIN(a, b) ((a < b) ? a : b)
+#define MAX(a, b) ((a > b) ? a : b)
+#define SWAP(type, a, b) \
+    do                   \
+    {                    \
+        type tmp = a;    \
+        a = b;           \
+        b = tmp;         \
+    } while (false);
 #endif
