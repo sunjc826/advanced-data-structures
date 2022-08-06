@@ -74,6 +74,13 @@ static TreeNode *NewTreeNode(Key key)
     return n;
 }
 
+static TreeNode *NewTreeNodeLeaf(Key key, Object object)
+{
+    TreeNode *n = NewTreeNode(key);
+    n->OBJECT = object;
+    return n;
+}
+
 static void TreeNode_free(TreeNode *n)
 {
     free(n);
@@ -99,6 +106,22 @@ static void Tree_free(TreeNode *n)
         }
         TreeNode_free(node);
     }
+}
+
+static Object Tree_find(TreeNode *n, Key key)
+{
+    if (Tree_IS_EMPTY(n))
+        return NULL_OBJECT;
+
+    while (!TreeNode_IS_LEAF(n))
+    {
+        if (key < n->key)
+            n = n->LEFT;
+        else
+            n = n->RIGHT;
+    }
+
+    return (n->key == key) ? n->OBJECT : NULL_OBJECT;
 }
 
 // Precondition: n is an interior node.
@@ -139,7 +162,7 @@ static void Tree_right_rotate(TreeNode *n)
 
 // Precondition: The left and right subtrees of n should be balanced.
 // Furthermore, n->LEFT->height and n->RIGHT->height must have a height difference of 2.
-static Tree_rebalance(TreeNode *n)
+static void Tree_rebalance(TreeNode *n)
 {
     if (n->LEFT->height == n->RIGHT->height + 2)
     {
@@ -163,7 +186,7 @@ static Tree_rebalance(TreeNode *n)
     }
 }
 
-static rebalance_tree_up_ancestor_chain(Stack *ancestor_chain)
+static void rebalance_tree_up_ancestor_chain(Stack *ancestor_chain)
 {
     TreeNode *ancestor;
     int old_height;
@@ -214,8 +237,8 @@ static bool Tree_insert(TreeNode *n, Key key, Object object)
     }
 
     // Insertion
-    TreeNode *old_leaf = NewTreeNode(n->key);
-    TreeNode *new_leaf = NewTreeNode(key);
+    TreeNode *old_leaf = NewTreeNodeLeaf(n->key, n->OBJECT);
+    TreeNode *new_leaf = NewTreeNodeLeaf(key, object);
     if (key < n->key)
     {
         n->LEFT = new_leaf;
@@ -279,4 +302,80 @@ static Object Tree_delete(TreeNode *n, Key key)
 
     rebalance_tree_up_ancestor_chain(ancestor_tracep);
     return object;
+}
+
+// Prints all leaf nodes.
+static void Tree_inorder_print(const TreeNode *node)
+{
+    if (TreeNode_IS_LEAF(node))
+        printf("%d ", node->key);
+    else
+    {
+        Tree_inorder_print(node->LEFT);
+        Tree_inorder_print(node->RIGHT);
+    }
+}
+
+typedef TreeNode Tree;
+typedef struct
+{
+    Key key;
+    int insertion_seq_num;
+} TestObject;
+
+static TestObject *NewTestObject(Key key, int seq_num)
+{
+    TestObject *o = malloc(sizeof(TestObject));
+    o->key = key;
+    o->insertion_seq_num = seq_num;
+    return o;
+}
+
+int main()
+{
+    Tree *tree = NewTree();
+    assert(Tree_find(tree, 1) == NULL_OBJECT);
+
+#define NUM_TRIALS 10
+
+    int r;
+    Key keys[NUM_TRIALS];
+    puts("Testing Tree_insert");
+    for (int i = 0; i < NUM_TRIALS; i++)
+    {
+        do
+        {
+            r = random() % KEY_MAX;
+        } while (Tree_find(tree, r) != NULL_OBJECT);
+        keys[i] = r;
+        Tree_insert(tree, r, NewTestObject(r, i));
+    }
+
+    Tree_inorder_print(tree);
+
+    puts("Testing Tree_find, Tree_delete");
+    for (int i = 0; i < NUM_TRIALS; i++)
+    {
+        TestObject *o = (TestObject *)Tree_find(tree, keys[i]);
+        // printf("[%d]%d ", o->insertion_seq_num, o->key);
+        assert(o->key == keys[i] && o->insertion_seq_num == i);
+        o = Tree_delete(tree, keys[i]);
+        assert(o->key == keys[i] && o->insertion_seq_num == i);
+    }
+    assert(Tree_IS_EMPTY(tree));
+    puts("Test tree free");
+    for (int i = 0; i < NUM_TRIALS; i++)
+    {
+        do
+        {
+            r = random() % KEY_MAX;
+        } while (Tree_find(tree, r) != NULL_OBJECT);
+        keys[i] = r;
+        Tree_insert(tree, r, NewTestObject(r, i));
+    }
+    Tree_free(tree);
+    tree = NULL;
+#undef NUM_TRIALS
+    puts("Tests passed");
+    return 0;
 }

@@ -551,7 +551,7 @@ int main()
         assert(o->key == keys[i] && o->insertion_seq_num == i);
     }
     assert(Tree_IS_EMPTY(tree));
-    printf("Test tree free");
+    puts("Test tree free");
     for (int i = 0; i < NUM_TRIALS; i++)
     {
         do
