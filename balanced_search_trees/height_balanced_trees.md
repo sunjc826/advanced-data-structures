@@ -1,6 +1,20 @@
 **Discussion** When proving the effectiveness of balanced search trees, it is a heuristic to provide a lower bound for the number of leaves given height. Precisely stated, let $n$ be the leaf count and $h$ the height. Let $g$ be some function such that $n\geq g(h)$. i.e given $h$, we have a lower bound for $n$. This is equivalent to $h\leq g^{-1}(n)$ (We assume an inverse of some sort exists.) Then this means that given $n$, we have an upper bound for $h$. And if this upper bound is good, this suggests that the balanced search tree is effective.
 
 
+**Pg. 58**
+> rotations can occur during an insert only on at most one level
+
+By symmetry, it suffices to examine Cases 2.1 and 2.2. (The ones where the left branch is higher than the right branch by 2.)
+In Case 2.2, we can see that after the rebalancing (left rotation, then right rotation), the parent's height will be the same as before the insertion. Hence, the rebalancing algorithm stops here.
+In Case 2.1, whether the parent height is one more than before insertion depends on the $\texttt{parent.left.right.height}$. We claim that this value cannot be equal to $\texttt{parent.left.left.height}$. To prove this, we need to make another claim:
+
+**Claim** Suppose there was an insertion operation and we are rebalancing. After a rebalancing operation at a node, if its children's heights are the same, then the node's own height would not have increased relative to before the insertion operation. <br>
+**Proof idea** This requires another case analysis and the idea that after an insertion operation and rebalancing, a node's height can either +0 (remain the same) or +1 as compared to before the insertion (proven by induction on the chain of rebalancing operations).
+
+Hence $\texttt{parent.left.right.height} = \texttt{parent.left.left.height} - 1$, so that after rebalancing (right rotation), parent's height remains the same as before rotation. <br/>
+This proves the claim. $\square$
+
+
 We provide derivations for some of the equations in the text.
 
 **Pg. 59** We note that this page is discussing average depth in the context of a "Fibonacci tree", that is a height-balanced tree where each node of height $h$ has 1 subtree of height $h-1$ and the other $h-2$. As mentioned in the book, these results do not hold in general.

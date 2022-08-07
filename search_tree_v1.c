@@ -425,7 +425,6 @@ static TreeNode *Tree_make_list(TreeNode *n)
 
 // adapted from https://stackoverflow.com/questions/36802354/print-binary-tree-in-a-pretty-way-using-c
 // prefix_length does not include null terminator
-// doesn't seem to work very well, unfortunately
 static void Tree_print_helper(const char *prefix, int prefix_length, const TreeNode *node, bool isLeft)
 {
 
@@ -442,11 +441,11 @@ static void Tree_print_helper(const char *prefix, int prefix_length, const TreeN
     int extended_prefix_length = prefix_length + strlen(extension);
     char *left_prefix = malloc(extended_prefix_length + 1);
     memcpy(left_prefix, prefix, prefix_length);
-    memcpy(left_prefix, extension, extension_length);
+    memcpy(left_prefix + prefix_length, extension, extension_length);
     left_prefix[extended_prefix_length] = '\0';
     char *right_prefix = malloc(extended_prefix_length + 1);
     memcpy(right_prefix, prefix, prefix_length);
-    memcpy(right_prefix, extension, extension_length);
+    memcpy(right_prefix + prefix_length, extension, extension_length);
     right_prefix[extended_prefix_length] = '\0';
     if (!TreeNode_IS_LEAF(node))
     {
@@ -496,7 +495,7 @@ void test_make_tree(void)
     for (int i = 0; i < NUM_NODES; i++)
         sorted[i].key = i;
     TreeNode *tree = make_tree_v3(sorted, NUM_NODES);
-    Tree_inorder_print(tree);
+    Tree_print(tree);
 #undef NUM_NODES
 }
 
