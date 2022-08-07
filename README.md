@@ -1,7 +1,12 @@
 # advanced-data-structures
+## Introduction
+This repository implements the datastructures introduced in Advanced Data Structures by Peter Brass. The c files in the folders are pretty much copied from the book itself, whereas the datastructures in the project root are my own implementations based on the book, with tests and all. The software engineering aspect is significantly improved.
+
+## Docs
 
 As there are many implementations of the same abstract data type, one of these implementations need to be chosen as the implementation of the header file for that ADT.
 - [Stack](stack.h): [v3](stack_v3.c)
+- [Bounded Stack](bounded_stack.h): A mix of [v1](stack_v1.c) and [v2](stack_v2.c)
 - [Queue](queue.h): [v4](queue_v4.c)
 
 

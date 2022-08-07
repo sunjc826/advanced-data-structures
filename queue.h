@@ -122,5 +122,8 @@ static ITEM QUEUE_DEQUEUE(QUEUENODE *queue)
 #undef QUEUE_INIT
 #undef NEWQUEUENODE
 #undef QUEUENODE_INIT
+#undef QUEUENODE
+#undef ITEM
+#undef WITH_TYPE
 #endif
 #endif

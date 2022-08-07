@@ -21,41 +21,17 @@ typedef struct TreeNode_st
 #define OBJECTS children.objects
 #define TreeNode_IS_LEAF(treenode) (((TreeNode *)treenode)->height == 0)
 #define TreeNode_IS_UNDERFLOWING(treenode) (((TreeNode *)treenode)->degree == (A - 1))
+#define TreeNode_IS_ALMOST_UNDERFLOWING(treenode) (((TreeNode *)treenode)->degree == A)
 #define TreeNode_IS_FULL(treenode) (((TreeNode *)treenode)->degree == B)
 #define Tree_IS_EMPTY(root) (((TreeNode *)root)->degree == 0)
 
 #define MAX_HEIGHT 100 // It is basically impossible for a (a, b)-tree to have this kind of height.
 
-typedef struct
-{
-    TreeNode *arr[MAX_HEIGHT];
-    TreeNode **next;
-} Stack;
-
-static void Stack_init(Stack *stack)
-{
-    stack->next = stack->arr;
-}
-
-static bool Stack_empty(Stack *stack)
-{
-    return stack->next == stack->arr;
-}
-
-static TreeNode *Stack_peek(Stack *stack)
-{
-    return stack->next[-1];
-}
-
-static TreeNode *Stack_pop(Stack *stack)
-{
-    return *--stack->next;
-}
-
-static void Stack_push(Stack *stack, TreeNode *n)
-{
-    *stack->next++ = n;
-}
+#define STACK_TYPE TreeNode *
+#define STACK_MAX MAX_HEIGHT
+#include "bounded_stack.h"
+#undef STACK_MAX
+#undef STACK_TYPE
 
 // Initializes an empty tree node.
 static void TreeNode_init(TreeNode *n)
@@ -69,6 +45,12 @@ static TreeNode *NewTreeNode(void)
     TreeNode *n = malloc(sizeof(TreeNode));
     TreeNode_init(n);
     return n;
+}
+
+// Does not free its associated object.
+static void TreeNode_free(TreeNode *n)
+{
+    free(n);
 }
 
 static TreeNode *NewTree(void)
@@ -178,6 +160,8 @@ static Object Tree_find(TreeNode *n, Key key)
     return (child_index == -1) ? NULL_OBJECT : n->OBJECTS[child_index];
 }
 
+// pg 78
+// TODO: Handle duplicate keys
 static void Tree_insert(TreeNode *n, Key key, Object object)
 {
     TreeNode *root = n;
@@ -301,4 +285,164 @@ static void Tree_insert(TreeNode *n, Key key, Object object)
     root->keys[1] = key_to_insert;
     root->NODES[0] = left;
     root->NODES[1] = right;
+}
+
+#define STACK_TYPE int
+#define STACK_TYPE_NAMESPACE int
+#define STACK_MAX MAX_HEIGHT
+#include "bounded_stack.h"
+#undef STACK_MAX
+#undef STACK_TYPE_NAMESPACE
+#undef STACK_TYPE
+
+static void share_op_rtol(TreeNode *from_right, TreeNode *to_left, TreeNode *parent, int left_index)
+{
+    TreeNode *left = to_left, *right = from_right;
+    int right_index = left_index + 1;
+    if (TreeNode_IS_LEAF(left))
+    {
+        left->keys[left->degree] = right->keys[0], left->OBJECTS[left->degree] = right->OBJECTS[0];
+        for (int i = 0; i < right->degree - 1; i++)
+            right->keys[i] = right->keys[i + 1], right->OBJECTS[i] = right->OBJECTS[i + 1];
+        parent->keys[right_index] = right->keys[0];
+    }
+    else
+    {
+        left->keys[left->degree] = parent->keys[right_index];
+        parent->keys[right_index] = right->keys[1];
+        for (int i = 1; i < right->degree - 1; i++)
+            right->keys[i] = right->keys[i + 1], right->NODES[i] = right->NODES[i + 1];
+        right->NODES[0] = right->NODES[1];
+    }
+    left->degree++;
+    right->degree--;
+}
+
+static void share_op_ltor(TreeNode *from_left, TreeNode *to_right, TreeNode *parent, int right_index)
+{
+    TreeNode *left = from_left, *right = to_right;
+    if (TreeNode_IS_LEAF(right))
+    {
+        for (int i = 0; i < right->degree; i++)
+            right->keys[i + 1] = right->keys[i], right->OBJECTS[i + 1] = right->OBJECTS[i];
+        right->keys[0] = left->keys[left->degree - 1];
+        right->OBJECTS[0] = left->OBJECTS[left->degree - 1];
+        parent->keys[right_index] = right->keys[0];
+    }
+    else
+    {
+        for (int i = 1; i < right->degree; i++)
+            right->keys[i + 1] = right->keys[i], right->NODES[i + 1] = right->NODES[i];
+        right->NODES[1] = right->NODES[0];
+        right->keys[1] = parent->keys[right_index];
+        parent->keys[right_index] = left->keys[left->degree - 1];
+        right->NODES[0] = left->NODES[left->degree - 1];
+    }
+    left->degree--;
+    right->degree++;
+}
+
+// joins right to left
+static void join_op(TreeNode *left, TreeNode *right, TreeNode *parent, int left_index)
+{
+    int right_index = left_index + 1;
+    if (TreeNode_IS_LEAF(left))
+    {
+        for (int i = left->degree, j = 0; j < right->degree; i++, j++)
+            left->keys[i] = right->keys[j], left->OBJECTS[i] = right->OBJECTS[j];
+    }
+    else
+    {
+        for (int i = left->degree + 1, j = 1; j < right->degree; i++, j++)
+            left->keys[i] = right->keys[j], left->NODES[i] = right->NODES[j];
+        left->keys[left->degree] = parent->keys[right_index];
+        left->NODES[left->degree] = right->NODES[0];
+    }
+    for (int i = right_index; i < parent->degree; i++)
+        parent->keys[i] = parent->keys[i + 1], parent->NODES[i] = parent->NODES[i + 1];
+    parent->degree--;
+    left->degree += right->degree;
+    right->degree = 0;
+}
+
+// pg 81
+static Object Tree_delete(TreeNode *n, Key key)
+{
+    if (Tree_IS_EMPTY(n))
+        return NULL_OBJECT;
+
+    Object object;
+    TreeNode *root = n;
+    Stack ancestor_trace, *ancestor_tracep = &ancestor_trace;
+    Stack_int indices, *indicesp = &indices;
+    int child_index;
+    while (!TreeNode_IS_LEAF(n))
+    {
+        Stack_push(ancestor_tracep, n);
+        child_index = binary_search_smallest_gt(n->keys[1], n->degree - 1, key);
+        Stack_push_int(indicesp, child_index);
+        n = n->NODES[child_index];
+    }
+
+    child_index = binary_search_exact(n->keys, n->degree, key);
+    if (child_index == -1)
+        return NULL_OBJECT;
+
+    object = n->OBJECTS[child_index];
+
+    // delete from leaf
+    for (int i = child_index; i < n->degree - 1; i++)
+        n->OBJECTS[i] = n->OBJECTS[i + 1];
+    n->degree--;
+    if (!TreeNode_IS_UNDERFLOWING(n))
+        return object;
+
+    TreeNode *underflowing_child = n;
+    while (!Stack_empty(ancestor_tracep))
+    {
+        TreeNode *parent = Stack_pop(ancestor_tracep);
+        int child_index = Stack_pop_int(indicesp);
+        TreeNode *neighbor;
+        // last child of parent
+        if (child_index == parent->degree - 1)
+        {
+            neighbor = parent->NODES[child_index - 1];
+            // sharing operation
+            if (!TreeNode_IS_ALMOST_UNDERFLOWING(neighbor))
+            {
+                share_op_ltor(neighbor, underflowing_child, parent, child_index);
+                return object;
+            }
+            // joining operation
+            else
+                join_op(neighbor, underflowing_child, parent, child_index - 1);
+        }
+        else
+        {
+            neighbor = parent->NODES[child_index + 1];
+            if (!TreeNode_IS_ALMOST_UNDERFLOWING(neighbor))
+            {
+                share_op_rtol(neighbor, underflowing_child, parent, child_index);
+                return object;
+            }
+            else
+                join_op(underflowing_child, neighbor, parent, child_index);
+        }
+
+        if (!TreeNode_IS_UNDERFLOWING(parent))
+            return object;
+        else
+            underflowing_child = parent;
+    }
+
+    // root node
+    if (root->degree >= 2 || TreeNode_IS_LEAF(root))
+        return object;
+
+    // root->degree == 1 && root is not a leaf
+    TreeNode *only_child = root->NODES[0];
+    *root = *only_child;
+    TreeNode_free(only_child);
+
+    return object;
 }
