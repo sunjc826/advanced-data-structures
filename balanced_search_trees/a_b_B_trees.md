@@ -130,7 +130,7 @@ We use the following lemmas:
 - Each insertion/deletion causes at the lowest level increases the tree potential by at most $3$.
 - Each restructuring operation decreases the tree potential by at least $2$.
 
-By definition of $\phi(n)$, at any step, $\forall n\in V_i, \phi(n)\geq 0$ so that $\phi(T_i)\geq 0$. Also, for any $i$, $\Delta \phi(T_i) \leq 3 - 2\cdot \text{m_i}$ where $m_i$ is the number of restructuring operations caused by the ith insertion/deletion. Note that $M_N = \frac{1}{N}\sum_{1\leq i\leq N}m_i$.
+By definition of $\phi(n)$, at any step, $\forall n\in V_i, \phi(n)\geq 0$ so that $\phi(T_i)\geq 0$. Also, for any $i$, $\Delta \phi(T_i) \leq 3 - 2\cdot m_i$ where $m_i$ is the number of restructuring operations caused by the ith insertion/deletion. Note that $M_N = \frac{1}{N}\sum_{1\leq i\leq N}m_i$.
 
 Hence, the following inequality holds for all $N\in \mathbb{Z}^+$:
 $$
