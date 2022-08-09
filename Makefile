@@ -41,6 +41,9 @@ search_tree_v1.out: stack.h queue.h
 test_height_balanced_tree: height_balanced_tree.out
 	./height_balanced_tree.out
 
+test_red_black_tree: red_black_tree.out
+	./red_black_tree.out
+
 %.out: %.c common.h
 	cc -o $@ $^ -Wall $(CCFLAGS)
 

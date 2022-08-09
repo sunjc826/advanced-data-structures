@@ -446,3 +446,10 @@ static Object Tree_delete(TreeNode *n, Key key)
 
     return object;
 }
+
+
+
+int main()
+{
+
+}
