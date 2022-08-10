@@ -22,5 +22,5 @@
         type tmp = a;    \
         a = b;           \
         b = tmp;         \
-    } while (false);
+    } while (false)
 #endif
