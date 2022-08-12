@@ -1,5 +1,3 @@
-#ifndef ads_stack_h
-#define ads_stack_h
 #include "common.h"
 // based on stack_v3
 #if defined STACK_TYPE && defined NULL_ITEM && defined STACK_TYPE_NAMESPACE
@@ -88,6 +86,4 @@ static void WITH_TYPE(Stack_push)(WITH_TYPE(StackNode) * stack, WITH_TYPE(StackI
 }
 
 #undef WITH_TYPE
-#endif
-
 #endif

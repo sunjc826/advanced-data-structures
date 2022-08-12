@@ -1,5 +1,3 @@
-#ifndef ads_queue_h
-#define ads_queue_h
 #include "common.h"
 // based on queue_v4
 
@@ -125,5 +123,4 @@ static ITEM QUEUE_DEQUEUE(QUEUENODE *queue)
 #undef QUEUENODE
 #undef ITEM
 #undef WITH_TYPE
-#endif
 #endif

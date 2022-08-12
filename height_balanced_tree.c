@@ -1,7 +1,5 @@
 #include "common.h"
-
-typedef int Key;
-typedef void *Object;
+#include "bbst.h"
 #define NULL_KEY 0
 #define NULL_OBJECT NULL
 #define KEY_MAX INT_MAX
@@ -81,17 +79,17 @@ static TreeNode *NewTreeNodeLeaf(Key key, Object object)
     return n;
 }
 
-static void TreeNode_free(TreeNode *n)
+void TreeNode_free(TreeNode *n)
 {
     free(n);
 }
 
-static TreeNode *NewTree(void)
+TreeNode *NewTree(void)
 {
     return NewTreeNode(NULL_KEY);
 }
 
-static void Tree_free(TreeNode *n)
+void Tree_free(TreeNode *n)
 {
     Stack stack;
     Stack_init(&stack);
@@ -108,7 +106,7 @@ static void Tree_free(TreeNode *n)
     }
 }
 
-static Object Tree_find(TreeNode *n, Key key)
+Object Tree_find(TreeNode *n, Key key)
 {
     if (Tree_IS_EMPTY(n))
         return NULL_OBJECT;
@@ -207,7 +205,7 @@ static void rebalance_tree_up_ancestor_chain(Stack *ancestor_chain)
 // pg 55
 // Inserts object with rebalancing operations.
 // Return Value: Returns true on success, false on failure.
-static bool Tree_insert(TreeNode *n, Key key, Object object)
+bool Tree_insert(TreeNode *n, Key key, Object object)
 {
     if (Tree_IS_EMPTY(n))
     {
@@ -258,7 +256,7 @@ static bool Tree_insert(TreeNode *n, Key key, Object object)
 
 // This is not in the book.
 // Return Value: Returns the object related to the deleted node, NULL_OBJECT if object not found.
-static Object Tree_delete(TreeNode *n, Key key)
+Object Tree_delete(TreeNode *n, Key key)
 {
     Object object;
     if (Tree_IS_EMPTY(n))
@@ -304,8 +302,247 @@ static Object Tree_delete(TreeNode *n, Key key)
     return object;
 }
 
+// Precondition: n must be the root of an non-empty tree.
+Key Tree_min(TreeNode *n)
+{
+    while (!TreeNode_IS_LEAF(n))
+        n = n->LEFT;
+
+    return n->key;
+}
+
+// Return Value: Returns the root of the tree resulting from the join operation.
+TreeNode *join_trees(TreeNode *smaller, TreeNode *larger)
+{
+    if (abs(smaller->height - larger->height) <= 1)
+        goto case_1;
+    else if (smaller->height < larger->height)
+        goto case_2;
+    else
+        goto case_3;
+
+case_1:
+{
+    TreeNode *new_root = NewTree();
+    new_root->LEFT = smaller;
+    new_root->RIGHT = larger;
+    new_root->key = Tree_min(larger);
+    new_root->height = MAX(smaller->height, larger->height) + 1;
+    return new_root;
+}
+
+case_2:
+{
+    Stack ancestor_trace, *ancestor_tracep = &ancestor_trace;
+    Stack_init(ancestor_tracep);
+    TreeNode *current = larger;
+    while (current->height > smaller->height)
+    {
+        Stack_push(ancestor_tracep, current);
+        current = current->LEFT;
+    }
+    TreeNode *parent = Stack_peek(ancestor_tracep);
+    TreeNode *new_subroot = NewTreeNode(Tree_min(current));
+    new_subroot->LEFT = smaller;
+    new_subroot->RIGHT = larger;
+    parent->LEFT = new_subroot;
+    new_subroot->height = smaller->height + 1;
+    // Technically, this entire if-else can be reduced to a single call of rebalance_tree_up_ancestor_chain(ancestor_tracep)
+    // But we will be more explicit.
+    if (current->height == smaller->height)
+    {
+        // Case 2.1
+        if (parent->height == current->height + 2)
+            ;
+        // Case 2.2
+        else
+            rebalance_tree_up_ancestor_chain(ancestor_tracep);
+    }
+    // Case 2.3
+    else
+        rebalance_tree_up_ancestor_chain(ancestor_tracep);
+    return larger;
+}
+
+case_3:
+{
+    Stack ancestor_trace, *ancestor_tracep = &ancestor_trace;
+    Stack_init(ancestor_tracep);
+    TreeNode *current = smaller;
+    while (current->height > larger->height)
+    {
+        Stack_push(ancestor_tracep, current);
+        current = current->RIGHT;
+    }
+
+    TreeNode *parent = Stack_peek(ancestor_tracep);
+    TreeNode *new_subroot = NewTreeNode(Tree_min(larger));
+    new_subroot->LEFT = current;
+    new_subroot->RIGHT = larger;
+    parent->RIGHT = new_subroot;
+    new_subroot->height = larger->height + 1;
+
+    if (current->height == larger->height)
+    {
+        if (parent->height == current->height + 2)
+            ;
+        else
+            rebalance_tree_up_ancestor_chain(ancestor_tracep);
+    }
+    else
+        rebalance_tree_up_ancestor_chain(ancestor_tracep);
+    return smaller;
+}
+}
+
+TreeNode *join_trees_with_known_key(TreeNode *smaller, TreeNode *larger, Key key)
+{
+    if (abs(smaller->height - larger->height) <= 1)
+        goto case_1;
+    else if (smaller->height < larger->height)
+        goto case_2;
+    else
+        goto case_3;
+
+case_1:
+{
+    TreeNode *new_root = NewTree();
+    new_root->LEFT = smaller;
+    new_root->RIGHT = larger;
+    new_root->key = key;
+    new_root->height = MAX(smaller->height, larger->height) + 1;
+    return new_root;
+}
+
+case_2:
+{
+    Stack ancestor_trace, *ancestor_tracep = &ancestor_trace;
+    Stack_init(ancestor_tracep);
+    TreeNode *current = larger;
+    while (current->height > smaller->height)
+    {
+        Stack_push(ancestor_tracep, current);
+        current = current->LEFT;
+    }
+    TreeNode *parent = Stack_peek(ancestor_tracep);
+    TreeNode *new_subroot = NewTreeNode(key);
+    new_subroot->LEFT = smaller;
+    new_subroot->RIGHT = larger;
+    parent->LEFT = new_subroot;
+    new_subroot->height = smaller->height + 1;
+    // Technically, this entire if-else can be reduced to a single call of rebalance_tree_up_ancestor_chain(ancestor_tracep)
+    // But we will be more explicit.
+    if (current->height == smaller->height)
+    {
+        // Case 2.1
+        if (parent->height == current->height + 2)
+            ;
+        // Case 2.2
+        else
+            rebalance_tree_up_ancestor_chain(ancestor_tracep);
+    }
+    // Case 2.3
+    else
+        rebalance_tree_up_ancestor_chain(ancestor_tracep);
+    return larger;
+}
+
+case_3:
+{
+    Stack ancestor_trace, *ancestor_tracep = &ancestor_trace;
+    Stack_init(ancestor_tracep);
+    TreeNode *current = smaller;
+    while (current->height > larger->height)
+    {
+        Stack_push(ancestor_tracep, current);
+        current = current->RIGHT;
+    }
+
+    TreeNode *parent = Stack_peek(ancestor_tracep);
+    TreeNode *new_subroot = NewTreeNode(key);
+    new_subroot->LEFT = current;
+    new_subroot->RIGHT = larger;
+    parent->RIGHT = new_subroot;
+    new_subroot->height = larger->height + 1;
+
+    if (current->height == larger->height)
+    {
+        if (parent->height == current->height + 2)
+            ;
+        else
+            rebalance_tree_up_ancestor_chain(ancestor_tracep);
+    }
+    else
+        rebalance_tree_up_ancestor_chain(ancestor_tracep);
+    return smaller;
+}
+}
+
+#define STACK_TYPE Key
+#define STACK_MAX MAX_TREE_DEPTH
+#define STACK_TYPE_NAMESPACE Key
+#include "bounded_stack.h"
+#undef STACK_TYPE_NAMESPACE
+#undef STACK_MAX
+#undef STACK_TYPE
+
+// Splits the tree rooted at n to trees smaller and larger, where split_key is contained in the larger tree.
+// In other words, (-inf, split_key) goes to smaller, [split_key, +inf) goes to larger.
+void Tree_split(TreeNode *n, Key split_key, TreeNode **smaller, TreeNode **larger)
+{
+    Stack smaller_nlist, *smaller_nlistp = &smaller_nlist, larger_nlist, *larger_nlistp = &larger_nlist;
+    Stack_Key smaller_klist, *smaller_klistp = &smaller_klist, larger_klist, *larger_klistp = &larger_klist;
+    Stack_init(smaller_nlistp);
+    Stack_init(larger_nlistp);
+    Stack_init_Key(smaller_klistp);
+    Stack_init_Key(larger_klistp);
+    while (!TreeNode_IS_LEAF(n))
+    {
+        if (split_key < n->key)
+        {
+            Stack_push(larger_nlistp, n->RIGHT);
+            Stack_push(larger_klistp, n->key);
+            n = n->LEFT;
+        }
+        else
+        {
+            Stack_push(smaller_nlistp, n->LEFT);
+            Stack_push(smaller_klistp, n->key);
+            n = n->RIGHT;
+        }
+    }
+
+    if (split_key < n->key)
+        Stack_push(smaller_nlistp, n);
+    else
+        Stack_push(larger_nlistp, n);
+
+    Key right_subtree_min_key;
+
+    // make smaller tree
+    TreeNode *smaller_right_subtree = Stack_pop(smaller_nlistp), *smaller_left_subtree;
+    while (!Stack_empty(smaller_nlistp))
+    {
+        smaller_left_subtree = Stack_pop(smaller_nlistp);
+        right_subtree_min_key = Stack_pop_Key(smaller_klistp);
+        smaller_right_subtree = join_trees_with_known_key(smaller_left_subtree, smaller_right_subtree, right_subtree_min_key);
+    }
+
+    // make larger tree
+    TreeNode *larger_left_subtree = Stack_pop(larger_nlistp), *larger_right_subtree;
+    while (!Stack_empty(larger_nlistp))
+    {
+        larger_right_subtree = Stack_pop(larger_nlistp);
+        right_subtree_min_key = Stack_pop_Key(larger_klistp);
+        larger_left_subtree = join_trees_with_known_key(larger_left_subtree, larger_right_subtree, right_subtree_min_key);
+    }
+
+    *smaller = smaller_right_subtree;
+    *larger = larger_left_subtree;
+}
+
 // Prints all leaf nodes.
-static void Tree_inorder_print(const TreeNode *node)
+void Tree_inorder_print(const TreeNode *node)
 {
     if (TreeNode_IS_LEAF(node))
         printf("%d ", node->key);
