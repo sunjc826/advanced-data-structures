@@ -1,27 +1,5 @@
 #include "common.h"
 #include "bbst.h"
-#define NULL_KEY 0
-#define NULL_OBJECT NULL
-#define KEY_MAX INT_MAX
-
-typedef struct TreeNode_st
-{
-    Key key;
-    union
-    {
-        struct TreeNode_st *node;
-        Object object;
-    } left;
-    struct TreeNode_st *right;
-    int height;
-} TreeNode;
-
-#define LEFT left.node
-#define OBJECT left.object
-#define RIGHT right
-#define Tree_IS_EMPTY(treenode) (((TreeNode *)treenode)->LEFT == NULL)
-#define TreeNode_IS_LEAF(treenode) (((TreeNode *)treenode)->RIGHT == NULL)
-#define MAX_TREE_DEPTH 200 // It is practically impossible for a balanced BST to have this height or more
 
 typedef struct
 {
@@ -303,12 +281,22 @@ Object Tree_delete(TreeNode *n, Key key)
 }
 
 // Precondition: n must be the root of an non-empty tree.
-Key Tree_min(TreeNode *n)
+// Return Value: The minimum key of the tree.
+static Key Tree_find_min_key(TreeNode *n)
 {
     while (!TreeNode_IS_LEAF(n))
         n = n->LEFT;
 
     return n->key;
+}
+
+// Return Value: The object with minimum key under the provided tree.
+Object Tree_find_min(TreeNode *n)
+{
+    while (!TreeNode_IS_LEAF(n))
+        n = n->LEFT;
+
+    return n->OBJECT;
 }
 
 // Return Value: Returns the root of the tree resulting from the join operation.
@@ -326,7 +314,7 @@ case_1:
     TreeNode *new_root = NewTree();
     new_root->LEFT = smaller;
     new_root->RIGHT = larger;
-    new_root->key = Tree_min(larger);
+    new_root->key = Tree_find_min_key(larger);
     new_root->height = MAX(smaller->height, larger->height) + 1;
     return new_root;
 }
@@ -342,7 +330,7 @@ case_2:
         current = current->LEFT;
     }
     TreeNode *parent = Stack_peek(ancestor_tracep);
-    TreeNode *new_subroot = NewTreeNode(Tree_min(current));
+    TreeNode *new_subroot = NewTreeNode(Tree_find_min_key(current));
     new_subroot->LEFT = smaller;
     new_subroot->RIGHT = larger;
     parent->LEFT = new_subroot;
@@ -376,7 +364,7 @@ case_3:
     }
 
     TreeNode *parent = Stack_peek(ancestor_tracep);
-    TreeNode *new_subroot = NewTreeNode(Tree_min(larger));
+    TreeNode *new_subroot = NewTreeNode(Tree_find_min_key(larger));
     new_subroot->LEFT = current;
     new_subroot->RIGHT = larger;
     parent->RIGHT = new_subroot;

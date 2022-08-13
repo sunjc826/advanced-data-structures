@@ -1,8 +1,5 @@
 #include "common.h"
-typedef int Key;
-#define NULL_KEY 0
-typedef void *Object;
-#define NULL_OBJECT NULL
+#include "element_types.h"
 #define A 4
 #define B 8
 typedef struct TreeNode_st
@@ -447,9 +444,6 @@ static Object Tree_delete(TreeNode *n, Key key)
     return object;
 }
 
-
-
 int main()
 {
-
 }

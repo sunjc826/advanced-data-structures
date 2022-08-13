@@ -5,12 +5,8 @@
 // where h := height of tree
 // All objects must have unique keys.
 #include "common.h"
+#include "element_types.h"
 
-typedef int Key;
-#define NULL_KEY 0
-#define NULL_OBJECT NULL
-#define KEY_MAX INT_MAX
-typedef void *Object;
 typedef struct TreeNode_st
 {
     Key key;

@@ -1,9 +1,5 @@
 #include "common.h"
-typedef int Key;
-#define NULL_KEY 0
-#define KEY_MAX INT_MAX
-typedef void *Object;
-#define NULL_OBJECT NULL
+#include "element_types.h"
 
 typedef enum
 {

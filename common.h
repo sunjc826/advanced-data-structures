@@ -1,5 +1,5 @@
-#ifndef ads_common_h
-#define ads_common_h
+#ifndef ADS_COMMON_H
+#define ADS_COMMON_H
 
 #include <stdio.h>
 #include <stdbool.h>
