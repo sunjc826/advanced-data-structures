@@ -23,4 +23,6 @@
         a = b;           \
         b = tmp;         \
     } while (false)
+#define COIN_FLIP() ((bool)(rand() & 1))
+
 #endif
