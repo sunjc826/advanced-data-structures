@@ -121,10 +121,21 @@ static void Heap_insert(HeapNode *heap, Key key, Object object)
     }
 }
 
-// Note: heap1, heap2 are each either null pointers or non-empty heaps
+// Note: heap1, heap2 can be null pointers, empty heaps, or non-empty heaps.
 static HeapNode *merge_heaps(HeapNode *heap1, HeapNode *heap2)
 {
     HeapNode *sentinel = NewHeapNode(NULL_KEY, NULL_OBJECT);
+    if (heap1 != NULL && Heap_IS_EMPTY(heap1))
+    {
+        HeapNode_free(heap1);
+        heap1 = NULL;
+    }
+
+    if (heap2 != NULL && Heap_IS_EMPTY(heap2))
+    {
+        HeapNode_free(heap2);
+        heap2 = NULL;
+    }
 
     HeapNode *right_most = sentinel;
     while (heap1 != NULL && heap2 != NULL)
