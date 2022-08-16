@@ -44,8 +44,11 @@ test_height_balanced_tree: height_balanced_tree.out
 test_red_black_tree: red_black_tree.out
 	./red_black_tree.out
 
-%.out: %.c common.h
-	cc -o $@ $^ -Wall $(CCFLAGS)
+test_leftist_heap: leftist_heap.out
+	./leftist_heap.out
+
+%.out: %.c common.h element_types.h
+	cc -o $@ $^ -Wall -g $(CCFLAGS)
 
 .PHONY: clean
 clean:

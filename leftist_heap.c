@@ -1,5 +1,5 @@
-#include <common.h>
-#include <element_types.h>
+#include "common.h"
+#include "element_types.h"
 typedef struct HeapNode_st
 {
     Key key;
@@ -83,7 +83,6 @@ static void rebalance_all(Stack *ancestor_chain)
     while (!Stack_empty(ancestor_chain))
     {
         HeapNode *ancestor = Stack_pop(ancestor_chain);
-        int old_rank = ancestor->rank;
         HeapNode_update_rank(ancestor);
 
         if (RANK(ancestor->left) < RANK(ancestor->right))
@@ -103,16 +102,26 @@ static void Heap_insert(HeapNode *heap, Key key, Object object)
 
     HeapNode *to_insert = NewHeapNode(key, object);
     Stack ancestor_trace, *ancestor_tracep = &ancestor_trace;
+    Stack_init(ancestor_tracep);
     HeapNode *current;
     for (current = heap; current != NULL && key > current->key; current = current->right)
         Stack_push(ancestor_tracep, current);
 
-    to_insert->left = current;
-    HeapNode *parent = Stack_peek(ancestor_tracep);
-    parent->right = to_insert;
-    rebalance_up_ancestor_chain(ancestor_tracep);
+    if (Stack_empty(ancestor_tracep))
+    {
+        SWAP(HeapNode, *current, *to_insert);
+        current->left = to_insert;
+    }
+    else
+    {
+        to_insert->left = current;
+        HeapNode *parent = Stack_peek(ancestor_tracep);
+        parent->right = to_insert;
+        rebalance_up_ancestor_chain(ancestor_tracep);
+    }
 }
 
+// Note: heap1, heap2 are each either null pointers or non-empty heaps
 static HeapNode *merge_heaps(HeapNode *heap1, HeapNode *heap2)
 {
     HeapNode *sentinel = NewHeapNode(NULL_KEY, NULL_OBJECT);
@@ -160,7 +169,63 @@ static void Heap_delete_min(HeapNode *heap, Key *key, Object *object)
     *key = heap->key;
     *object = heap->object;
 
-    HeapNode *merged = merge_heaps(heap->left, heap->right);
-    *heap = *merged;
-    HeapNode_free(merged);
+    if (heap->left == NULL && heap->right == NULL)
+        heap->rank = 0;
+    else
+    {
+        HeapNode *merged = merge_heaps(heap->left, heap->right);
+        *heap = *merged;
+        HeapNode_free(merged);
+    }
+}
+
+typedef struct
+{
+    int index;
+    int value;
+} TestObject;
+
+static TestObject *NewTestObject(int index, int value)
+{
+    TestObject *o = malloc(sizeof(TestObject));
+    o->index = index;
+    o->value = value;
+    return o;
+}
+
+int i_comp(const void *a, const void *b)
+{
+    return (*(int *)a < *(int *)b) ? -1 : 1;
+}
+
+int main()
+{
+#define NUM_TRIALS 1000
+    HeapNode *heap = NewHeap();
+    Key key;
+    TestObject *object = malloc(sizeof(TestObject));
+    int values[NUM_TRIALS];
+    int running_min[NUM_TRIALS];
+    for (int i = 0; i < NUM_TRIALS; i++)
+    {
+        int r = rand() % INT_MAX;
+        values[i] = r;
+        Heap_insert(heap, r, NewTestObject(i, r));
+        if (i == 0)
+            running_min[i] = r;
+        else
+            running_min[i] = MIN(running_min[i - 1], r);
+        Heap_find_min(heap, &key, (void **)&object);
+        assert(running_min[i] == key);
+    }
+
+    qsort(values, NUM_TRIALS, sizeof(int), i_comp);
+    for (int i = 0; i < NUM_TRIALS; i++)
+    {
+        Heap_delete_min(heap, &key, (void **)&object);
+        assert(values[i] == key);
+    }
+#undef NUM_TRIALS
+    puts("Tests passed");
+    return 0;
 }
