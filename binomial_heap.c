@@ -61,6 +61,8 @@ static void Heap_find_min(HeapNode *heap, Key *key, Object *object)
     }
 }
 
+// Note that this implementation of merge heaps cause Heap_insert to be O(log n) amortized instead of O(1).
+// One possible way to achieve O(1) amortized insert would be to have a binomial heap where the tree heights increase instead of decrease
 static HeapNode *merge_heaps(HeapNode *heap1, HeapNode *heap2)
 {
     if (heap1 != NULL && Heap_IS_EMPTY(heap1))
