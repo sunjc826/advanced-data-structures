@@ -8,26 +8,31 @@ package java;
 // has to be treated differently from other nodes.
 //
 // Another reason for the lack of symmetry is that the leaf nodes are different from interior nodes.
-public class BSTNodeM1<K extends ComparableExt<K>, V> implements BST<K, V> {
+public class BSTNodeM1<K extends ComparableExt<K>, V> implements BST<K, V>
+{
     BSTNodeM1<K, V> left = null;
     BSTNodeM1<K, V> right = null;
     K key;
     V value;
 
-    static <K extends ComparableExt<K>, V> BSTNodeM1<K, V> NewTree() {
+    static <K extends ComparableExt<K>, V> BSTNodeM1<K, V> NewTree()
+    {
         return new BSTNodeM1<>();
     }
 
-    private BSTNodeM1() {
+    private BSTNodeM1()
+    {
         this(null, null);
     }
 
-    private BSTNodeM1(K key, V value) {
+    private BSTNodeM1(K key, V value)
+    {
         this.key = key;
         this.value = value;
     }
 
-    private void copy(BSTNodeM1<K, V> other) {
+    private void copy(BSTNodeM1<K, V> other)
+    {
         this.key = other.key;
         this.left = other.left;
         this.right = other.right;
@@ -36,22 +41,26 @@ public class BSTNodeM1<K extends ComparableExt<K>, V> implements BST<K, V> {
 
     // This should only be used on the tree root.
     @Override
-    public boolean isEmpty() {
+    public boolean isEmpty()
+    {
         return this.left == null;
     }
 
-    private boolean isLeaf() {
+    private boolean isLeaf()
+    {
         return this.value != null;
     }
 
     @Override
-    public V find(K key) {
+    public V find(K key)
+    {
         assert (key != null);
         if (this.isEmpty())
             return null;
 
         BSTNodeM1<K, V> current = this;
-        while (!current.isLeaf()) {
+        while (!current.isLeaf())
+        {
             if (key.lt(current.key))
                 current = current.left;
             else
@@ -62,17 +71,20 @@ public class BSTNodeM1<K extends ComparableExt<K>, V> implements BST<K, V> {
     }
 
     @Override
-    public boolean insert(K key, V value) {
+    public boolean insert(K key, V value)
+    {
         assert (key != null);
         assert (value != null);
-        if (this.isEmpty()) {
+        if (this.isEmpty())
+        {
             this.key = key;
             this.value = value;
             return true;
         }
 
         BSTNodeM1<K, V> current = this;
-        while (!current.isLeaf()) {
+        while (!current.isLeaf())
+        {
             if (key.lt(key))
                 current = current.left;
             else
@@ -86,10 +98,13 @@ public class BSTNodeM1<K extends ComparableExt<K>, V> implements BST<K, V> {
         BSTNodeM1<K, V> oldLeafNode = new BSTNodeM1<>(current.key, current.value);
         current.value = null;
 
-        if (key.lt(current.key)) {
+        if (key.lt(current.key))
+        {
             current.left = newLeafNode;
             current.right = oldLeafNode;
-        } else {
+        }
+        else
+        {
             current.key = key;
             current.left = oldLeafNode;
             current.right = newLeafNode;
@@ -98,12 +113,16 @@ public class BSTNodeM1<K extends ComparableExt<K>, V> implements BST<K, V> {
         return true;
     }
 
-    // Note that I do not check for empty root, see Preconditions
     @Override
-    public V delete(K key) {
+    public V delete(K key)
+    {
         assert (key != null);
+        if (this.isEmpty())
+            return null;
+
         V value;
-        if (this.isLeaf()) {
+        if (this.isLeaf())
+        {
             if (!this.key.equals(key))
                 return null;
 
@@ -113,7 +132,8 @@ public class BSTNodeM1<K extends ComparableExt<K>, V> implements BST<K, V> {
         }
 
         BSTNodeM1<K, V> current = this, parent = null;
-        while (!current.isLeaf()) {
+        while (!current.isLeaf())
+        {
             parent = current;
             if (key.lt(current.key))
                 current = current.left;

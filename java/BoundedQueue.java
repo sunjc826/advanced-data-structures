@@ -1,6 +1,7 @@
 package java;
 
-public interface BoundedQueue<T> {
+public interface BoundedQueue<T>
+{
     boolean isEmpty();
 
     boolean isFull();

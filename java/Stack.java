@@ -1,6 +1,7 @@
 package java;
 
-public interface Stack<T> {
+public interface Stack<T>
+{
     boolean isEmpty();
 
     void push(T item);

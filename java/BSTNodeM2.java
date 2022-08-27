@@ -1,22 +1,26 @@
 package java;
 
 // Model 2 search tree
-public class BSTNodeM2<K extends ComparableExt<K>, V> implements BST<K, V> {
+public class BSTNodeM2<K extends ComparableExt<K>, V> implements BST<K, V>
+{
     BSTNodeM2<K, V> left;
     BSTNodeM2<K, V> right;
     K key;
     V value;
 
-    public static <K extends ComparableExt<K>, V> BSTNodeM2<K, V> NewTree() {
+    public static <K extends ComparableExt<K>, V> BSTNodeM2<K, V> NewTree()
+    {
         return new BSTNodeM2<>(null, null);
     }
 
-    private BSTNodeM2(K key, V value) {
+    private BSTNodeM2(K key, V value)
+    {
         this.key = key;
         this.value = value;
     }
 
-    private void copy(BSTNodeM2<K, V> other) {
+    private void copy(BSTNodeM2<K, V> other)
+    {
         this.key = other.key;
         this.left = other.left;
         this.right = other.right;
@@ -25,18 +29,21 @@ public class BSTNodeM2<K extends ComparableExt<K>, V> implements BST<K, V> {
 
     // Only applies to the root node
     @Override
-    public boolean isEmpty() {
+    public boolean isEmpty()
+    {
         return this.key == null;
     }
 
     @Override
-    public V find(K key) {
+    public V find(K key)
+    {
         assert (key != null);
         if (this.isEmpty())
             return null;
 
         BSTNodeM2<K, V> current = this;
-        while (current != null) {
+        while (current != null)
+        {
             if (key.equals(current.key))
                 return current.value;
             else if (key.lt(current.key))
@@ -49,25 +56,30 @@ public class BSTNodeM2<K extends ComparableExt<K>, V> implements BST<K, V> {
     }
 
     @Override
-    public boolean insert(K key, V value) {
+    public boolean insert(K key, V value)
+    {
         assert (key != null);
         assert (value != null);
 
-        if (this.isEmpty()) {
+        if (this.isEmpty())
+        {
             this.key = key;
             this.value = value;
             return true;
         }
 
         BSTNodeM2<K, V> current = this, parent = null;
-        while (current != null) {
+        while (current != null)
+        {
             parent = current;
-            if (key.equals(current.key)) {
+            if (key.equals(current.key))
+            {
                 if (current.value != null)
                     return false;
                 current.value = value;
                 return true;
-            } else if (key.lt(current.key))
+            }
+            else if (key.lt(current.key))
                 current = current.left;
             else
                 current = current.right;
@@ -90,12 +102,17 @@ public class BSTNodeM2<K extends ComparableExt<K>, V> implements BST<K, V> {
     // that
     // the key, despite being there, is actually "non-existent".
     @Override
-    public V delete(K key) {
+    public V delete(K key)
+    {
         assert (key != null);
+        if (this.isEmpty())
+            return null;
+
         V value;
 
         BSTNodeM2<K, V> current = this, parent = null;
-        while (current != null && !key.equals(current.key)) {
+        while (current != null && !key.equals(current.key))
+        {
             parent = current;
             if (key.lt(current.key))
                 current = current.left;
@@ -107,16 +124,19 @@ public class BSTNodeM2<K extends ComparableExt<K>, V> implements BST<K, V> {
             return null;
 
         value = current.value;
-        if (current.left == null && current.right == null) {
+        if (current.left == null && current.right == null)
+        {
             if (current == this)// root
                 current.value = null;
-            else {
+            else
+            {
                 if (current == parent.left)
                     parent.left = null;
                 else
                     parent.right = null;
             }
-        } else if (current.left == null)
+        }
+        else if (current.left == null)
             current.copy(current.right);
         else if (current.right == null)
             current.copy(current.left);

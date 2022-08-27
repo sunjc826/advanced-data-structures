@@ -1,9 +1,7 @@
 // pg 148
 // using height balanced tree as the underlying BBST
 #include "common.h"
-typedef int Key;
-#define NULL_KEY 0
-typedef int Endpoint;
+#include "element_types.h"
 
 // represents a closed interval [a, b]
 typedef struct Interval_st

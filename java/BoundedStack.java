@@ -1,6 +1,7 @@
 package java;
 
-public interface BoundedStack<T> {
+public interface BoundedStack<T>
+{
     boolean isEmpty();
 
     boolean isFull();

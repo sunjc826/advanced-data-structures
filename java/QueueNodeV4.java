@@ -1,10 +1,12 @@
 package java;
 
-public class QueueNodeV4<T> implements Queue<T> {
+public class QueueNodeV4<T> implements Queue<T>
+{
     T item = null;
     QueueNodeV4<T> next = null;
 
-    public static <T> QueueNodeV4<T> NewQueue() {
+    public static <T> QueueNodeV4<T> NewQueue()
+    {
         QueueNodeV4<T> queue = new QueueNodeV4<>();
         QueueNodeV4<T> placeholder = new QueueNodeV4<>();
         placeholder.next = placeholder;
@@ -12,24 +14,28 @@ public class QueueNodeV4<T> implements Queue<T> {
         return queue;
     }
 
-    private QueueNodeV4() {
-    }
+    private QueueNodeV4()
+    {}
 
-    private QueueNodeV4(T item) {
+    private QueueNodeV4(T item)
+    {
         this.item = item;
     }
 
     @Override
-    public boolean isEmpty() {
+    public boolean isEmpty()
+    {
         return this.next == this.next.next;
     }
 
-    private void setBeforePlaceholder(QueueNodeV4<T> beforePlaceholder) {
+    private void setBeforePlaceholder(QueueNodeV4<T> beforePlaceholder)
+    {
         this.next = beforePlaceholder;
     }
 
     @Override
-    public void enqueue(T item) {
+    public void enqueue(T item)
+    {
         QueueNodeV4<T> newNode = new QueueNodeV4<>(item);
         QueueNodeV4<T> beforePlaceholder = this.next;
         QueueNodeV4<T> placeholder = beforePlaceholder.next;
@@ -39,12 +45,14 @@ public class QueueNodeV4<T> implements Queue<T> {
     }
 
     @Override
-    public T peek() {
+    public T peek()
+    {
         return this.next.next.next.item;
     }
 
     @Override
-    public T dequeue() {
+    public T dequeue()
+    {
         QueueNodeV4<T> beforePlaceholder = this.next;
         QueueNodeV4<T> placeholder = beforePlaceholder.next;
         QueueNodeV4<T> afterPlaceholder = placeholder.next;

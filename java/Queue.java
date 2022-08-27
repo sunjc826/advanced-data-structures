@@ -1,6 +1,7 @@
 package java;
 
-public interface Queue<T> {
+public interface Queue<T>
+{
     boolean isEmpty();
 
     void enqueue(T item);
